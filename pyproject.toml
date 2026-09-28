@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=66.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gitplus"
+dynamic = ["version"]
+description = "CLI tool for Git commits with VERSION and CHANGELOG.md"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = ["GitPython"]
+
+[project.scripts]
+gitplus = "gitplus:main"
+"git+" = "gitplus:main"
+
+[tool.setuptools]
+py-modules = ["gitplus"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}

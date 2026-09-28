@@ -115,7 +115,8 @@ def parse_changelog_scenario(changelog_path):
     return version, commit_message, new_content
 
 
-if __name__ == '__main__':
+def main():
+    """Общая точка входа для gitplus, git+ и прямого запуска скрипта."""
     # Ищем корень репозитория, не меняя рабочую директорию на каждом шаге.
     current_dir = os.path.abspath(os.curdir)
     while not os.path.exists(os.path.join(current_dir, '.git')):
@@ -160,10 +161,19 @@ if __name__ == '__main__':
     untracked_files = list(repo.untracked_files)
     staged_changes = list(repo.index.diff("HEAD")) if has_repo_commits else []
 
-    if not (untracked_files or working_tree_diffs or staged_changes):
-        # Если нет изменений файлов, но, возможно, мы хотим обновить версию/лог?
-        # Обычно если нет изменений, коммит пустой. Скрипт раньше выходил.
-        print('Nothing to commit!')
+    changed_paths = set(untracked_files)
+    for diff in working_tree_diffs + staged_changes:
+        changed_paths.update(path for path in (diff.a_path, diff.b_path) if path)
+
+    # В существующем репозитории VERSION — результат работы GitPlus, а не
+    # самостоятельный повод для очередного инкремента и коммита.
+    meaningful_changes = changed_paths - ({VERSION_FILE} if has_repo_commits else set())
+
+    if not meaningful_changes:
+        if changed_paths:
+            print('Nothing to commit except VERSION; version was not incremented.')
+        else:
+            print('Nothing to commit!')
         sys.exit(0)
 
     # Добавляем все изменения (включая перемещения)
@@ -213,3 +223,7 @@ if __name__ == '__main__':
 
     print(commit_message)
     repo.git.commit(m=commit_message)
+
+
+if __name__ == '__main__':
+    main()
